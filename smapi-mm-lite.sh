@@ -36,8 +36,6 @@ get_active_profile() {
             fi
         fi
     done
-
-    echo "Active profile: $active_profile"
 }
 
 create_profile() {
@@ -93,6 +91,41 @@ activate_profile() {
 
     # Create empty file with profile name to indicate that profile is active
     touch "$MODS_FOLDER/$PROFILE_TESTER_NAME_PREFIX$profile_name"
+    get_active_profile
+
+}
+
+delete_profile() {
+    profile_name="$1"
+    if [ ! -d "$PROFILES_FOLDER/$profile_name" ]; then
+        echo "Profile does not exist."
+        return 0
+    fi
+
+    echo "Deleting profile $profile_name"
+
+    # If profile is active, deactivate it
+    if [ "$active_profile" == "$profile_name" ]; then
+        deactivate_profile
+    fi
+
+    # Delete the profile folder
+    rm -rf "$PROFILES_FOLDER/$profile_name"
+    gen_profiles_list
+
+    # If the profile was the last one, activate the default profile
+    if [ "$active_profile" == "" ]; then
+        # If the default profile doesn't exist, create it
+        if [ ! -d "$PROFILES_FOLDER/$DEFAULT_PROFILE_NAME" ]; then
+            create_profile "$DEFAULT_PROFILE_NAME"
+        fi
+
+        activate_profile "$DEFAULT_PROFILE_NAME"
+    fi
+
+    echo "Profile $profile_name deleted."
+
+    return 1
 
 }
 
@@ -165,8 +198,9 @@ create_profile_menu() {
     echo "############"
     echo "Enter profile name:"
     read profile_name
-    res=create_profile "$profile_name"
-    echo "$res"
+    create_profile "$profile_name"
+    sleep 2
+    main_menu
 }
 
 load_profile_menu() {
@@ -175,10 +209,30 @@ load_profile_menu() {
     echo "-----------------"
     echo "Profiles:"
     profiles_list
+    echo "Enter profile number to activate:"
+    read profile_number
+    profile_name="${profiles[$((profile_number-1))]}"
+    activate_profile "$profile_name"
+    sleep 2
+    main_menu
+}
 
+remove_profiles_menu() {
+    clear
+    echo "Remove profiles menu"
+    echo "---------------------"
+    echo "Profiles:"
+    profiles_list
+    echo "Enter profile number to delete:"
+    read profile_number
+    profile_name="${profiles[$((profile_number-1))]}"
+    delete_profile "$profile_name"
+    sleep 2
+    main_menu
 }
 
 main_menu() {
+    gen_profiles_list
     clear
     echo "Stardew Valley Mod Manager Lite"
     echo "--------------------------------"
@@ -188,7 +242,7 @@ main_menu() {
     echo "Active profile: $active_profile"
     echo "1. Create profile"
     echo "2. Load profile"
-    echo "3. Manage profiles"
+    echo "3. Remove profile"
     echo "4. Exit"
     echo "--------------------------------"
     echo -n "Enter your choice: "
@@ -196,7 +250,7 @@ main_menu() {
     case $choice in
     1) create_profile_menu ;;
     2) load_profile_menu ;;
-    3) manage_profiles ;;
+    3) remove_profiles_menu ;;
     4) exit ;;
     *)
         echo "Invalid choice"
@@ -208,7 +262,7 @@ main_menu() {
 }
 
 setup
-gen_profiles_list
+
 main_menu
 
 # sleep 2
