@@ -199,6 +199,7 @@ create_profile_menu() {
     echo "Enter profile name:"
     read profile_name
     create_profile "$profile_name"
+    open "$PROFILES_FOLDER/$profile_name"
     sleep 2
     main_menu
 }
@@ -211,7 +212,7 @@ load_profile_menu() {
     profiles_list
     echo "Enter profile number to activate:"
     read profile_number
-    profile_name="${profiles[$((profile_number-1))]}"
+    profile_name="${profiles[$((profile_number - 1))]}"
     activate_profile "$profile_name"
     sleep 2
     main_menu
@@ -225,7 +226,7 @@ remove_profiles_menu() {
     profiles_list
     echo "Enter profile number to delete:"
     read profile_number
-    profile_name="${profiles[$((profile_number-1))]}"
+    profile_name="${profiles[$((profile_number - 1))]}"
     delete_profile "$profile_name"
     sleep 2
     main_menu
